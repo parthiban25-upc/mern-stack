@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TaskFlow | MERN Task Manager</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      :root {
+        --bg: #f4efe6;
+        --panel: rgba(255, 252, 246, 0.9);
+        --panel-strong: #fffaf2;
+        --text: #1f2a24;
+        --muted: #66756c;
+        --accent: #0e7c66;
+        --accent-dark: #095849;
+        --danger: #c24a3a;
+        --border: rgba(25, 45, 39, 0.12);
+        --shadow: 0 20px 60px rgba(31, 42, 36, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(14, 124, 102, 0.16), transparent 32%),
+          radial-gradient(circle at bottom right, rgba(194, 74, 58, 0.12), transparent 28%),
+          linear-gradient(135deg, #f9f5ed, #efe5d6);
+        min-height: 100vh;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      .shell {
+        width: min(1120px, calc(100vw - 32px));
+        margin: 32px auto;
+        padding: 28px;
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        background: rgba(255, 251, 245, 0.78);
+        backdrop-filter: blur(18px);
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 24px;
+        margin-bottom: 28px;
+      }
+
+      .hero-card,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 24px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent);
+        font-size: 0.95rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        font-size: clamp(2.2rem, 6vw, 4.6rem);
+        line-height: 0.92;
+        margin-bottom: 12px;
+      }
+
+      .subtle {
+        color: var(--muted);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .stat {
+        padding: 14px;
+        border-radius: 18px;
+        background: var(--panel-strong);
+        border: 1px solid var(--border);
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 1.5rem;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 24px;
+      }
+
+      .panel h2 {
+        font-size: 1.4rem;
+        margin-bottom: 16px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: white;
+      }
+
+      .field textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .button {
+        border: none;
+        border-radius: 999px;
+        padding: 12px 18px;
+        cursor: pointer;
+        transition: transform 0.18s ease, opacity 0.18s ease;
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+      }
+
+      .button-primary {
+        background: var(--accent);
+        color: white;
+      }
+
+      .button-secondary {
+        background: rgba(14, 124, 102, 0.08);
+        color: var(--accent-dark);
+      }
+
+      .button-danger {
+        background: rgba(194, 74, 58, 0.12);
+        color: var(--danger);
+      }
+
+      .task-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .task-card {
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 18px;
+        background: var(--panel-strong);
+      }
+
+      .task-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .badge-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 12px 0;
+      }
+
+      .badge {
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.86rem;
+        background: rgba(14, 124, 102, 0.1);
+        color: var(--accent-dark);
+      }
+
+      .empty {
+        padding: 28px;
+        text-align: center;
+        color: var(--muted);
+        border: 1px dashed var(--border);
+        border-radius: 18px;
+      }
+
+      .message {
+        margin-bottom: 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(14, 124, 102, 0.09);
+      }
+
+      .error {
+        background: rgba(194, 74, 58, 0.12);
+        color: #7c2c22;
+      }
+
+      @media (max-width: 920px) {
+        .hero,
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useEffect, useMemo, useState } = React;
+
+      const defaultTaskForm = {
+        title: "",
+        description: "",
+        status: "todo",
+        priority: "medium",
+        dueDate: "",
+      };
+
+      function App() {
+        const [mode, setMode] = useState("login");
+        const [authForm, setAuthForm] = useState({
+          name: "",
+          email: "",
+          password: "",
+        });
+        const [taskForm, setTaskForm] = useState(defaultTaskForm);
+        const [tasks, setTasks] = useState([]);
+        const [editingId, setEditingId] = useState(null);
+        const [token, setToken] = useState(localStorage.getItem("taskflow_token") || "");
+        const [user, setUser] = useState(() => {
+          const saved = localStorage.getItem("taskflow_user");
+          return saved ? JSON.parse(saved) : null;
+        });
+        const [message, setMessage] = useState("");
+        const [error, setError] = useState("");
+        const [loading, setLoading] = useState(false);
+
+        const authHeaders = useMemo(() => ({
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        }), [token]);
+
+        useEffect(() => {
+          if (token) {
+            fetchTasks();
+          }
+        }, [token]);
+
+        async function request(url, options = {}) {
+          const response = await fetch(url, options);
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.message || "Something went wrong.");
+          }
+          return data;
+        }
+
+        async function handleAuthSubmit(event) {
+          event.preventDefault();
+          setError("");
+          setMessage("");
+          setLoading(true);
+
+          try {
+            const endpoint = mode === "register" ? "/api/auth/register" : "/api/auth/login";
+            const payload = mode === "register" ? authForm : {
+              email: authForm.email,
+              password: authForm.password,
+            };
+
+            const data = await request(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            localStorage.setItem("taskflow_token", data.token);
+            localStorage.setItem("taskflow_user", JSON.stringify(data.user));
+            setToken(data.token);
+            setUser(data.user);
+            setAuthForm({ name: "", email: "", password: "" });
+            setMessage(`Welcome back, ${data.user.name}.`);
+          } catch (err) {
+            setError(err.message);
+          } finally {
+            setLoading(false);
+          }
+        }
+
+        async function fetchTasks() {
+          try {
+            const data = await request("/api/tasks", {
+              headers: authHeaders,
+            });
+            setTasks(data);
+          } catch (err) {
+            setError(err.message);
+          }
+        }
+
+        async function handleTaskSubmit(event) {
+          event.preventDefault();
+          setError("");
+          setMessage("");
+          setLoading(true);
+
+          try {
+            const method = editingId ? "PUT" : "POST";
+            const url = editingId ? `/api/tasks/${editingId}` : "/api/tasks";
+            const payload = {
+              ...taskForm,
+              dueDate: taskForm.dueDate || null,
+            };
+
+            const savedTask = await request(url, {
+              method,
+              headers: authHeaders,
+              body: JSON.stringify(payload),
+            });
+
+            if (editingId) {
+              setTasks((current) => current.map((task) => task._id === editingId ? savedTask : task));
+              setMessage("Task updated successfully.");
+            } else {
+              setTasks((current) => [savedTask, ...current]);
+              setMessage("Task created successfully.");
+            }
+
+            setTaskForm(defaultTaskForm);
+            setEditingId(null);
+          } catch (err) {
+            setError(err.message);
+          } finally {
+            setLoading(false);
+          }
+        }
+
+        function startEdit(task) {
+          setEditingId(task._id);
+          setTaskForm({
+            title: task.title,
+            description: task.description || "",
+            status: task.status,
+            priority: task.priority,
+            dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : "",
+          });
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        async function deleteTask(id) {
+          setError("");
+          setMessage("");
+          try {
+            await request(`/api/tasks/${id}`, {
+              method: "DELETE",
+              headers: authHeaders,
+            });
+            setTasks((current) => current.filter((task) => task._id !== id));
+            if (editingId === id) {
+              setEditingId(null);
+              setTaskForm(defaultTaskForm);
+            }
+            setMessage("Task deleted successfully.");
+          } catch (err) {
+            setError(err.message);
+          }
+        }
+
+        function logout() {
+          localStorage.removeItem("taskflow_token");
+          localStorage.removeItem("taskflow_user");
+          setToken("");
+          setUser(null);
+          setTasks([]);
+          setTaskForm(defaultTaskForm);
+          setEditingId(null);
+          setMessage("You have been logged out.");
+          setError("");
+        }
+
+        const taskStats = {
+          total: tasks.length,
+          active: tasks.filter((task) => task.status !== "done").length,
+          completed: tasks.filter((task) => task.status === "done").length,
+        };
+
+        return (
+          <main className="shell">
+            <section className="hero">
+              <div className="hero-card">
+                <p className="eyebrow">MERN Stack Project</p>
+                <h1>Organize work with calm, clear momentum.</h1>
+                <p className="subtle">
+                  Secure authentication, protected CRUD APIs, and a polished task dashboard in one lightweight full stack app.
+                </p>
+                <div className="stats">
+                  <div className="stat">
+                    <strong>{taskStats.total}</strong>
+                    <span>Total Tasks</span>
+                  </div>
+                  <div className="stat">
+                    <strong>{taskStats.active}</strong>
+                    <span>In Progress</span>
+                  </div>
+                  <div className="stat">
+                    <strong>{taskStats.completed}</strong>
+                    <span>Completed</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="panel">
+                <h2>{user ? `Signed in as ${user.name}` : mode === "register" ? "Create an account" : "Welcome back"}</h2>
+                <p className="subtle">
+                  {user ? "Your dashboard is connected to protected task routes." : "Use the form below to register or log in."}
+                </p>
+
+                {message && <div className="message">{message}</div>}
+                {error && <div className="message error">{error}</div>}
+
+                {!user ? (
+                  <form className="stack" onSubmit={handleAuthSubmit}>
+                    {mode === "register" && (
+                      <label className="field">
+                        <span>Name</span>
+                        <input
+                          value={authForm.name}
+                          onChange={(event) => setAuthForm({ ...authForm, name: event.target.value })}
+                          placeholder="Aarav Patel"
+                          required
+                        />
+                      </label>
+                    )}
+
+                    <label className="field">
+                      <span>Email</span>
+                      <input
+                        type="email"
+                        value={authForm.email}
+                        onChange={(event) => setAuthForm({ ...authForm, email: event.target.value })}
+                        placeholder="you@example.com"
+                        required
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>Password</span>
+                      <input
+                        type="password"
+                        value={authForm.password}
+                        onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })}
+                        placeholder="Enter password"
+                        required
+                      />
+                    </label>
+
+                    <div className="actions">
+                      <button className="button button-primary" type="submit" disabled={loading}>
+                        {loading ? "Please wait..." : mode === "register" ? "Register" : "Login"}
+                      </button>
+                      <button
+                        className="button button-secondary"
+                        type="button"
+                        onClick={() => setMode(mode === "register" ? "login" : "register")}
+                      >
+                        {mode === "register" ? "Use login" : "Create account"}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="actions">
+                    <button className="button button-secondary" type="button" onClick={fetchTasks}>
+                      Refresh tasks
+                    </button>
+                    <button className="button button-danger" type="button" onClick={logout}>
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {user && (
+              <section className="layout">
+                <div className="panel">
+                  <h2>{editingId ? "Edit Task" : "Create Task"}</h2>
+                  <form className="stack" onSubmit={handleTaskSubmit}>
+                    <label className="field">
+                      <span>Title</span>
+                      <input
+                        value={taskForm.title}
+                        onChange={(event) => setTaskForm({ ...taskForm, title: event.target.value })}
+                        placeholder="Prepare sprint review deck"
+                        required
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>Description</span>
+                      <textarea
+                        value={taskForm.description}
+                        onChange={(event) => setTaskForm({ ...taskForm, description: event.target.value })}
+                        placeholder="Add details, notes, or blockers."
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>Status</span>
+                      <select
+                        value={taskForm.status}
+                        onChange={(event) => setTaskForm({ ...taskForm, status: event.target.value })}
+                      >
+                        <option value="todo">To Do</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="done">Done</option>
+                      </select>
+                    </label>
+
+                    <label className="field">
+                      <span>Priority</span>
+                      <select
+                        value={taskForm.priority}
+                        onChange={(event) => setTaskForm({ ...taskForm, priority: event.target.value })}
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </label>
+
+                    <label className="field">
+                      <span>Due date</span>
+                      <input
+                        type="date"
+                        value={taskForm.dueDate}
+                        onChange={(event) => setTaskForm({ ...taskForm, dueDate: event.target.value })}
+                      />
+                    </label>
+
+                    <div className="actions">
+                      <button className="button button-primary" type="submit" disabled={loading}>
+                        {loading ? "Saving..." : editingId ? "Update task" : "Add task"}
+                      </button>
+                      {editingId && (
+                        <button
+                          className="button button-secondary"
+                          type="button"
+                          onClick={() => {
+                            setEditingId(null);
+                            setTaskForm(defaultTaskForm);
+                          }}
+                        >
+                          Cancel edit
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                </div>
+
+                <div className="panel">
+                  <h2>Task Board</h2>
+                  {tasks.length === 0 ? (
+                    <div className="empty">No tasks yet. Add your first task to get started.</div>
+                  ) : (
+                    <div className="task-list">
+                      {tasks.map((task) => (
+                        <article className="task-card" key={task._id}>
+                          <div className="task-top">
+                            <div>
+                              <h3>{task.title}</h3>
+                              <p className="subtle">{task.description || "No description provided."}</p>
+                            </div>
+                            <div className="actions">
+                              <button className="button button-secondary" type="button" onClick={() => startEdit(task)}>
+                                Edit
+                              </button>
+                              <button className="button button-danger" type="button" onClick={() => deleteTask(task._id)}>
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="badge-row">
+                            <span className="badge">Status: {task.status}</span>
+                            <span className="badge">Priority: {task.priority}</span>
+                            <span className="badge">
+                              Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "Not set"}
+                            </span>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+          </main>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
