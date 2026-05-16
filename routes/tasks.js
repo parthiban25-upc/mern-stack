@@ -8,7 +8,7 @@ router.use(auth);
 
 router.get("/", async (req, res) => {
   try {
-    const tasks = await Task.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const tasks = await Task.find({ userId: req.user._id }).sort({ createdAt: -1 });
     return res.json(tasks);
   } catch (error) {
     console.error("Fetch tasks failed:", error.message);
@@ -25,7 +25,7 @@ router.post("/", async (req, res) => {
     }
 
     const task = await Task.create({
-      user: req.user._id,
+      userId: req.user._id,
       title,
       description,
       status,
@@ -33,12 +33,15 @@ router.post("/", async (req, res) => {
       dueDate: dueDate || null,
     });
 
+
     return res.status(201).json(task);
   } catch (error) {
-    console.error("Create task failed:", error.message);
+    console.error("Create task failed:");
+    console.error(error);
     return res.status(500).json({ message: "Unable to create task." });
   }
 });
+
 
 router.put("/:id", async (req, res) => {
   try {
@@ -52,7 +55,7 @@ router.put("/:id", async (req, res) => {
     }
 
     const task = await Task.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
+      { _id: req.params.id, userId: req.user._id },
       updates,
       { new: true, runValidators: true }
     );
@@ -70,7 +73,7 @@ router.put("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    const task = await Task.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+    const task = await Task.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
 
     if (!task) {
       return res.status(404).json({ message: "Task not found." });
