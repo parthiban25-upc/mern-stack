@@ -106,6 +106,11 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
+    // Update login tracking
+    user.lastLogin = new Date();
+    user.loginCount = (user.loginCount || 0) + 1;
+    await user.save();
+
     const token = signJwt({
       sub: user._id.toString(),
       email: user.email,
@@ -118,6 +123,8 @@ router.post("/login", async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        lastLogin: user.lastLogin,
+        loginCount: user.loginCount,
       },
     });
   } catch (error) {
